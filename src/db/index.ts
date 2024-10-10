@@ -2,7 +2,7 @@ import { Sequelize, DataTypes } from 'sequelize';
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: ':memory:',
+  storage: 'database.sqlite', // This should point to your SQLite file
   logging: false, // Optional: disable logging for a cleaner console output
 });
 
@@ -15,6 +15,7 @@ const Comic = sequelize.define('Comic', {
   cgcGrade: { type: DataTypes.FLOAT },
   purchasePrice: { type: DataTypes.FLOAT },
   notes: { type: DataTypes.TEXT },
+  metadata: { type: DataTypes.JSON },
 });
 
 sequelize.sync()

@@ -1,60 +1,48 @@
-// src/components/ComicList.tsx
-"use client";
+import { NextResponse } from 'next/server';
+import { Comic } from '../../../db';
+import { fetchComicMetadata } from '../../../utils/comicVineApi';
 
-import React, { useEffect, useState } from 'react';
-import { fetchComics } from '../services/comicService';
+export async function GET() {
+  try {
+    const comics = await Comic.findAll();
+    return NextResponse.json(comics);
+  } catch (error) {
+    console.error('Error fetching comics:', error);
+    return NextResponse.json({ error: 'Failed to fetch comics' }, { status: 500 });
+  }
+}
 
-type Comic = {
-  id: number;
-  title: string;
-  issueNumber: number;
-  publisher?: string;
-  condition?: string;
-  cgcGrade?: number;
-  purchasePrice?: number;
-  notes?: string;
-  metadata?: any; // Update to reflect metadata
-};
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const comicMetadata = await fetchComicMetadata(body.title);
+    const newComic = await Comic.create({ ...body, metadata: comicMetadata });
+    return NextResponse.json(newComic, { status: 201 });
+  } catch (error) {
+    console.error('Error creating comic:', error);
+    return NextResponse.json({ error: 'Failed to create comic' }, { status: 500 });
+  }
+}
 
-const ComicList: React.FC = () => {
-  const [comics, setComics] = useState<Comic[]>([]);
-  const [error, setError] = useState<string | null>(null);
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { id, ...updateFields } = body;
+    await Comic.update(updateFields, { where: { id } });
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error('Error updating comic:', error);
+    return NextResponse.json({ error: 'Failed to update comic' }, { status: 500 });
+  }
+}
 
-  useEffect(() => {
-    const getComics = async () => {
-      try {
-        const data = await fetchComics();
-        setComics(data);
-      } catch (err) {
-        setError('Failed to fetch comics');
-      }
-    };
-    getComics();
-  }, []);
-
-  return (
-    <div>
-      <h2>Comic Inventory</h2>
-      {error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : (
-        <ul>
-          {comics.map((comic) => (
-            <li key={comic.id}>
-              <strong>{comic.title}</strong> - Issue #{comic.issueNumber}
-              {comic.metadata && (
-                <div>
-                  <p>Publisher: {comic.metadata.publisher?.name}</p>
-                  <p>Release Date: {comic.metadata.cover_date}</p>
-                  <p>Writers: {comic.metadata.person_credits?.map((p: any) => p.name).join(', ')}</p>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
-
-export default ComicList;
+export async function DELETE(req: Request) {
+  try {
+    const { id } = await req.json();
+    await Comic.destroy({ where: { id } });
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error('Error deleting comic:', error);
+    return NextResponse.json({ error: 'Failed to delete comic' }, { status: 500 });
+  }
+}

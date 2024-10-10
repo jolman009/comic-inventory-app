@@ -21,3 +21,23 @@ export const addComic = async (comic: { title: string; issueNumber: number; publ
     throw new Error('Failed to add comic');
   }
 };
+
+export const updateComic = async (comic: { id: number; title?: string; issueNumber?: number; publisher?: string; condition?: string; cgcGrade?: number; purchasePrice?: number; notes?: string; }): Promise<any> => {
+  try {
+    const response = await axios.put(BASE_URL, comic);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating comic:', error);
+    throw new Error('Failed to update comic');
+  }
+};
+
+export const deleteComic = async (id: number): Promise<any> => {
+  try {
+    const response = await axios.delete(BASE_URL, { data: { id } });
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting comic:', error);
+    throw new Error('Failed to delete comic');
+  }
+};

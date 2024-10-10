@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { fetchComics } from '../services/comicService';
+import { fetchComics, deleteComic, updateComic } from '../services/comicService';
+import { Card, CardContent, Typography, Button } from '@mui/material';
 
 type Comic = {
   id: number;
@@ -12,6 +13,13 @@ type Comic = {
   cgcGrade?: number;
   purchasePrice?: number;
   notes?: string;
+  metadata?: {
+    publisher?: {
+      name: string;
+    };
+    cover_date?: string;
+    person_credits?: { name: string }[];
+  };
 };
 
 const ComicList: React.FC = () => {
@@ -30,17 +38,49 @@ const ComicList: React.FC = () => {
     getComics();
   }, []);
 
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteComic(id);
+      setComics(comics.filter((comic) => comic.id !== id));
+    } catch (err) {
+      setError('Failed to delete comic');
+    }
+  };
+
+  const handleEdit = async (comic: Comic) => {
+    // Logic to show an editable form to update the comic
+    // After editing, send PUT request using `updateComic()`
+  };
+
   return (
     <div>
       <h2>Comic Inventory</h2>
       {error ? (
-        <p style={{ color: 'red' }}>{error}</p>
+        <Typography color="error">{error}</Typography>
       ) : (
-        <ul>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
           {comics.map((comic) => (
-            <li key={comic.id}>{comic.title} - Issue #{comic.issueNumber}</li>
+            <Card key={comic.id} style={{ width: '300px' }}>
+              <CardContent>
+                <Typography variant="h5">{comic.title}</Typography>
+                <Typography variant="subtitle1">Issue #{comic.issueNumber}</Typography>
+                {comic.metadata && (
+                  <div>
+                    <Typography variant="body2">Publisher: {comic.metadata.publisher?.name}</Typography>
+                    <Typography variant="body2">Release Date: {comic.metadata.cover_date}</Typography>
+                    <Typography variant="body2">
+                      Writers: {comic.metadata.person_credits?.map((p) => p.name).join(', ')}
+                    </Typography>
+                  </div>
+                )}
+                <Button onClick={() => handleEdit(comic)}>Edit</Button>
+                <Button onClick={() => handleDelete(comic.id)} color="error">
+                  Delete
+                </Button>
+              </CardContent>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
